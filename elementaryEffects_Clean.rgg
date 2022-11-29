@@ -3,7 +3,7 @@
 * Version: 1.0 (Oct. 2021)
 * Author: R.J.L. Rutjens (rik.rutjens@nottingham.ac.uk)
 * Description: 
-* 	This code accompanies the paper **TO DO**. 
+* 	This code accompanies the paper ‘Elementary Effects for models with dimensional inputs of arbitrary type and range: scaling and trajectory generation’. 
 *	It is to be used together with EE_TestModel_main.rgg. While this is a .rgg file (which extends Java),
 *	the code is 99% Java-compatible (except for the links with the RGG-platform GroIMP), and one
 *	can just copy/paste parts of the code to their own implementation.
@@ -1158,7 +1158,6 @@ public class ElementaryEffects implements Serializable {
 					// recalculate delta values to account for QR sampling doubles
 					Delta.setEntry(j,0,Math.abs((Double)B_optimal.getEntry(i*(k+1),j)-(Double)B_optimal.getEntry(i*(k+1)+j+1,j))); 
 					double deltaTemp = ( (Double)Delta.getEntry(j,0)*((Double)max.get(j)-(Double)min.get(j)) );
-					println("radial: " + deltaTemp); //TEST
 					if (B_optimal.getEntry(i*(k+1),j) <= B_optimal.getEntry(i*(k+1)+j+1,j)) { // i.e. increased parameter value in next step 
 						// EE[i*k+j][kk] is the effect of the j-th parameter in the i-th trajectory for the kk-th output
 						EE.setEntry(i*k+j,kk, ((Double)Y.getEntry(i*(k+1)+j+1,kk) - (Double)Y.getEntry(i*(k+1),kk))/deltaTemp);

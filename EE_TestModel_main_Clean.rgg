@@ -1,4 +1,4 @@
-/* 	This is a 'clean' version, part of the supplementary materials of the paper *** 
+/* 	This is a 'clean' version, part of the supplementary materials of the paper ‘Elementary Effects for models with dimensional inputs of arbitrary type and range: scaling and trajectory generation’ 
 	Note that this is a .rgg file, and not a Java-file. It is meant to be ran on the 
 	plant-modelling platform GroIMP.
 */
@@ -16,7 +16,7 @@ import org.apache.commons.math3.util.MathArrays;
 	/*** ************************ ***/
 	
 // input variables
-	static double[] X_double = new double[10]; // ** SET ** blabla
+	static double[] X_double = new double[10]; // ** SET ** 
 	static int[] X_int = new int[0]; // ** SET **
 	static boolean[] X_boolean = new boolean[0]; // ** SET **
 	static double[] a_saltelli = new double[X_double.length];
@@ -25,18 +25,6 @@ import org.apache.commons.math3.util.MathArrays;
 // output variables
 	static int outputLength = 1;
 	private double[] Y = new double[outputLength]; // ** SET **
-	// Y_1 = Morris test function 						(20 inputs, unif[0,1])
-	// Y_2 = Sobol g-function							(k inputs, unif[0,1])
-	// Y_3 Modified G-function							(k inputs, unif[0,1])
-	// Y_4 K-function (Bratley et al.?)					(k inputs, unif[0,1])
-	// Y_5 non-additive function (Saltelli)				(k inputs, k even, norm(mu_i,sigma_i))
-	// Y_6 Ishigami test function						(3 inputs, unif[-pi,pi] (can adjust test function to use [0,1]))
-	// Y_7 Borehole function (dimensional)				(8 inputs, norm, lognorm and unif)
-	// Y_8 OTL circuit function (dimensional)			(6 inputs, unif? not specified)
-	// Y_9 Piston simulation function (dimensional)		(7 inputs, unif? not specified)
-	// Y_10 Wing weight function (dimensional)			(10 inputs, unif? not specified)
-	// Y_XL total internode length; for code testing	(n/a)
-	//							min total inputs:		20 + 8 + 6 + 7 + 10 = 51 
 
 // internal parameters
 	private int simnr;
@@ -59,10 +47,10 @@ static double[][] STiEstimate = new double[50][X_double.length];
 static double[] STiNumApprox = new double[X_double.length]; 
 private double MAE = 0;
 private double[] MAEG6 = new double[9];
-private double[] STiExactKfun = calcSTiEstimate(X_double.length); // TO DO later add other functions.
-private double[][] STiExactMatrix = new double[50][X_double.length]; // TO DO later add other functions.
-private double[] STiExactG6fun = calcSTiG6fun(X_double.length); // TO DO later add other functions.
-private double[] STiExact6dimfun = calcSTi6dimfun(); // TO DO later add other functions.
+private double[] STiExactKfun = calcSTiEstimate(X_double.length); 
+private double[][] STiExactMatrix = new double[50][X_double.length]; 
+private double[] STiExactG6fun = calcSTiG6fun(X_double.length); 
+private double[] STiExact6dimfun = calcSTi6dimfun();
 static int[] rankingXi = new int[X_double.length];
 static int[] rankingMu = new int[X_double.length];
 static double[] kendallCoeff = new double[2]; 		// kendall correlation coefficient based on xi- and mu-rankings
@@ -207,8 +195,22 @@ public void run ()
 							eeobj.Yb[i] = calcY6dimfun(-1);
 						} else{ eeobj.Yb[i] = calcYfour(6);}	
 					}
+				} else if(X_double.length==8){ //Penman-monteith
+				for(int i=0; i<eeobj.Yb.length; i++){
+					X_double = eeobj.B_saltelli.getRow(i); 
+					if(G6fun == true){  
+						eeobj.Yb[i] = -1;
+					} else if(sixdim==true){
+						double[] tempPM = {0.35, 400,0.2,50,2.7,0.2367,0.005,0.015};
+						double[] tempPM2 = {0.05,0,1.1,1000,0.3,0.0133,0.065,0.005};
+						for (int ii=0; ii<X_double.length; ii++) { 
+							X_double[ii] *= tempPM[ii];
+							X_double[ii] += tempPM2[ii];
+						}
+						eeobj.Yb[i] = calcPenmanMonteith(-1);
+					} else{ eeobj.Yb[i] = calcYfour(8);}	
 				}
-				// end intermezzo
+				}
 				eeobj.elementaryEffectsSetNextParameterPoint(simnr); //Set first set of parameters
 				nrSims = eeobj.elementaryEffectsGetNrSims();
 			}
@@ -242,9 +244,8 @@ public void run ()
 			}
 			exportData(outputData);
 			int tempcounter = counter; // For Khare runs, to fix correlation coefficient calculations when Khare has to redo trajectory generation.
-			//eeobj.elementaryEffectsCalcEffects(); // For EOT
-			eeobj.elementaryEffectsCalcEffectsRadial(); // For all Standard and Pinned radial designs
-			//eeobj.elementaryEffectsCalcEffectsRadialWinding(); // For all winding designs.
+							eeobj.elementaryEffectsCalcEffectsWinding(); // For EOT + winding designs??
+			//eeobj.elementaryEffectsCalcEffectsRadial(); // For all Standard and Pinned radial designs
 			eeobj.elementaryEffectsCalcMeasures();
 			double[] temparray = kendallCoefficient();
 			if(tempcounter == counter){
@@ -385,7 +386,7 @@ void exportData(DatasetRef dsr) {
 	/*** ************************ ***/
 	/*** ************************ ***/
 	
-double calcYone(){ // Calculation of Morris' test function (Khare: TST = {X1, X4, X2, X9, X10, X8, X5, X3, X6, X7}, #T = 10)
+double calcYone(){ // Calculation of Morris' test function 
 	double result = 0;
 	for(int i =0; i<10; i++){
 		if(i==3 || i==5 || i==7){
@@ -544,7 +545,7 @@ double calcYone(){ // Calculation of Morris' test function (Khare: TST = {X1, X4
 	return result;
 }
 
-double calcYtwo(){ // Sobol g-function (according to Khare (supplementary): G20: TST = {X1, X2, X3, X4, X5, X6, X7}, #T = 7)
+double calcYtwo(){ // Sobol g-function 
 	double result = 1;
 	for(int i=0;i<20;i++){ // ** SET **
 		result *= (Math.abs(4*X_double[i]-2)+(i+1-2)/2)/(1+(i+1-2)/2);
@@ -558,11 +559,11 @@ double calcYthree(int k){ // Modified G-function (see Campolongo 2011 for parame
 	double[] alpha; // ** SET **
 	double[] delta = new double[k]; // ** SET **
 	if(k==10){ //Saltelli G6 function
-		a= a_saltelli;//new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4}; //TEST 7/5/21
+		a= a_saltelli;
 		alpha = new double[] {2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 	}
 	else if(k==50){
-		a= a_saltelli; //TEST 7/5/21 new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4};
+		a= a_saltelli; 
 		alpha = new double[] {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, .2, .2, .2, .2, .2, .2, .2, .2, .2, .2,.2, .2, .2, .2, .2, .2, .2, .2, .2, .2,.2, .2, .2, .2, .2, .2, .2, .2, .2, .2,.2, .2, .2, .2, .2, .2, .2, .2, .2, .2};
 	}
 	else{
@@ -572,23 +573,19 @@ double calcYthree(int k){ // Modified G-function (see Campolongo 2011 for parame
 			a[i]=1; alpha[i]=2;
 		}
 	}
-	/*for(int i=0; i<k; i++){
-		delta[i] = random(0,1);
-	}*/
-	if(k==10 || k==50){	//TEST 7/5/21 delta needs to be reset only between replicates, not at every simulation point.
+	if(k==10 || k==50){	
 		for(int i=0; i<k; i++){
-			delta[i] = deltaG6[i+counter*k]; // 1.0/(i+1.1); // TEST 21/5 deltaG6[i+counter*10];
+			delta[i] = deltaG6[i+counter*k]; 
 		}
 	}
 	for(int i=0;i<k;i++){ // ** SET **
-		//result *= ((1.0+alpha[i])*Math.abs(2*(X_double[i]+delta[i]-((long) (X_double[i]+delta[i]) ) )-1)**alpha[i]+a[i] )/(1+a[i]);
-		double modulo = (X_double[i]+delta[i])%1;// 1.0/2+delta[i] - Math.floor(1.0/2+delta[i]); //X_double[i]+delta[i] - Math.floor(X_double[i]+delta[i]);//(X_double[i]+delta[i])%1;
-		result = result*((1.0+alpha[i])*(Math.abs( 2*modulo -1))**alpha[i]+a[i] )/(1+a[i]); // correct given X_i and delta_i >0.
+		double modulo = (X_double[i]+delta[i])%1;
+		result = result*((1.0+alpha[i])*(Math.abs( 2*modulo -1))**alpha[i]+a[i] )/(1+a[i]); 
 	}
 	return result;	
 }
 
-/*double calcYfour(int k){ //K-function (Bratley et al.?) (Campo: X1 and X2 most important if k=20 (?))
+/*double calcYfour(int k){ //K-function (Bratley et al.?) 
 	double result=0;
 	for(int i=0;i<k;i++){ 
 		double temp = 1;
@@ -600,7 +597,7 @@ double calcYthree(int k){ // Modified G-function (see Campolongo 2011 for parame
 	return result;
 }*/
 
-double calcYfour(int k){ //K-function (Bratley et al.?) (Campo: X1 and X2 most important if k=20 (?)) Recursive definition, 'for fun'. Same result as above.
+double calcYfour(int k){ //K-function (Bratley et al.?) 
 	double result=0;
 	double[] a = new double[k];
 	a[k-1] = (-1)**k*X_double[k-1];
@@ -656,7 +653,7 @@ double calcYeight(){ //OTL circuit function (dimensional) // ** SET **
 }	
 
 double calcYnine(){//Piston simulation function (dimensional) // ** SET **
-	double M = 1; //X_double[32] oid
+	double M = 1; 
 	double S = 1;
 	double V_0 = 1;
 	double K = 1;
@@ -693,18 +690,24 @@ double calcY6dimfun(int i){
 	g[4] = - 0.05*Math.sin(Math.PI*(X_double[4]-0.2)) - 1.02;
 	g[5] = -1.08;
 	double result = 0;
-	if(i==-1){result = g[0]+g[1]+g[2]+g[3]+g[4]+g[5];} else {result = g[0]+g[1]+g[2]+g[3]+g[4]+g[5];} //{result = g[i];} //TEST for paper approach 30/4/21
+	if(i==-1){result = g[0]+g[1]+g[2]+g[3]+g[4]+g[5];} else {result = g[0]+g[1]+g[2]+g[3]+g[4]+g[5];} 
+	return result;
+}
+
+double calcPenmanMonteith(int i){ 
+	double result = 0;
+    result = 1.0*(X_double[0]*X_double[1]+X_double[2]*X_double[3]*X_double[4]*X_double[5])/(1.0*X_double[0]+X_double[6]*(1+X_double[5]/X_double[7]));
+    //println("PM = " + result);
 	return result;
 }
 
 /** Saltelli STi stuff **/
-double[] calcSTiEstimate(int k){ // analytical STi for K-function (seems correct)
-	double vk = 1.0/10*(1.0/3)**k+1.0/18-1.0/9*(1.0/2)**(2*k)+(-1)**(k+1)*2.0/45*(1.0/2)**k; // Checked: is correct
+double[] calcSTiEstimate(int k){ // analytical STi for K-function 
+	double vk = 1.0/10*(1.0/3)**k+1.0/18-1.0/9*(1.0/2)**(2*k)+(-1)**(k+1)*2.0/45*(1.0/2)**k; 
 	double[] result = new double[k];
 	for(int i=0; i<k; i++){
-		result[i] = ((1.0/40)*(1.0/3)**k+(1.0/8)*(1.0/3)**(i+1)+(1.0/10)*(-1)**(i+1+k)*(1.0/2)**(k-(i+1))*(1.0/3)**(i+1) )/vk; //Checked: simplified saltelli result is correct
+		result[i] = ((1.0/40)*(1.0/3)**k+(1.0/8)*(1.0/3)**(i+1)+(1.0/10)*(-1)**(i+1+k)*(1.0/2)**(k-(i+1))*(1.0/3)**(i+1) )/vk; 
 	}
-	//println("STiFunExact test= " + Arrays.toString(result));
 	return result;
 }
 
@@ -712,35 +715,27 @@ double[] calcSTiG6fun(int k){ // analytical STi for G6-function
 	double[] a; // ** SET **
 	double[] alpha; // ** SET **
 	if(k==10){ //Saltelli G6 function
-		a= a_saltelli; //new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4}; //TEST 7/5/21
+		a= a_saltelli; 
 		alpha = new double[] {2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 	}
 	else if(k==50){
-		a= a_saltelli; // TEST 7/5/21 new double[] {0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4,0, 0.1, 0.2, 0.3, 0.4, 0.8, 1, 2, 3, 4};
+		a= a_saltelli; 
 		alpha = new double[] {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, .2, .2, .2, .2, .2, .2, .2, .2, .2, .2,.2, .2, .2, .2, .2, .2, .2, .2, .2, .2,.2, .2, .2, .2, .2, .2, .2, .2, .2, .2,.2, .2, .2, .2, .2, .2, .2, .2, .2, .2};
 	}
 	else{
 		a = new double[k];
 		alpha = new double[k];
-		for(int i=0; i<k; i++){ //TO DO
+		for(int i=0; i<k; i++){ 
 			a[i]=1; alpha[i]=2;
 		}
 	}
 	double[] result = new double[k];
 	double V = 1;
 	for(int i=0; i<k; i++){
-		V *= ( 1+ alpha[i]**2/((1+2*alpha[i])*(1+a[i])**2) );	// Checked: is correct
+		V *= ( 1+ alpha[i]**2/((1+2*alpha[i])*(1+a[i])**2) );
 	}
 	V -= 1.0;
-	//println("V " +V);
-	/*for(int i=0; i<k; i++){ // Checked: is correct
-		double Vti = (alpha[i]**2/((1+2*alpha[i])*(1+a[i])**2));
-		for(int j=0; j<k; j++){
-			if(j!=i){Vti *= (1+alpha[j]**2/((1+2*alpha[j])*(1+a[j])**2));}
-		}
-		result[i] = Vti*1.0/V; // E[V(...)]/V
-	}*/
-	for(int i=0; i<k; i++){ // checked; gives same as above for loop, so is correct
+	for(int i=0; i<k; i++){ 
 		double Vti = 1;
 		for(int j=0; j<k; j++){
 			if(j!=i){Vti *= (1+alpha[j]**2/((1+2*alpha[j])*(1+a[j])**2));}
@@ -748,13 +743,11 @@ double[] calcSTiG6fun(int k){ // analytical STi for G6-function
 		Vti -= 1;
 		result[i] = 1-Vti*1.0/V; // 1-V[E(...)]/V
 	}
-	//println("STiFunExact test= " + Arrays.toString(result));
 	return result;
 }
 
 double[] calcSTi6dimfun(){ // analytical STi for 6 dimensional function Puy et al 2021
 	double[] result = new double[] {0.0972/0.240377,0.136/0.240377,0.00358/0.240377,0.00301/0.240377,0.000587/0.240377,0/0.240377};
-	//println("STiFunExact test= " + Arrays.toString(result));
 	return result;
 }
 
@@ -805,10 +798,6 @@ double[] pearsonCoefficient(){
 				estimatedrankingMu[i] += 1.0/j;
 			}
 		}
-		/*println(Arrays.toString(estimatedrankingXi));
-		println(Arrays.toString(estimatedrankingMu));
-		println(Arrays.toString(rankingXi));
-		println(Arrays.toString(rankingMu));*/
 	} else if(G6fun == false && sixdim == true){ //6dim fun
 		for(int i = 0; i<k; i++){
 			for(int j=i+1; j<k+1; j++){
